@@ -63,6 +63,8 @@ void printUsage(char* argv[])
 
 	Mandelbrot(threshold, max_iterations, center, scale, resolution, ar);
 
+	freeComplexNumber(center);
+
 	printf("Calculation complete, outputting to file %s\n", argv[7]);
 	//END STEP 2
 

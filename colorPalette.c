@@ -20,6 +20,39 @@ void usage(char* argv[])
 int P3colorpalette(char* colorfile, int width, int heightpercolor, char* outputfile)
 {
 	//YOUR CODE HERE
+
+	//Attempts to open outputfile first
+	FILE* outptr = fopen(outputfile, "w");
+	if (outptr == NULL) {
+		printf("File can't be opened / created\n");
+		return 1;
+	}
+
+	int numcolors = -1;
+	uint8_t** colorarray = FileToColorMap(colorfile, &numcolors);
+	if (numcolors == -1 || colorarray == NULL) {
+		fclose(outptr);
+		return 1;
+	}
+
+	fprintf(outptr, "P3 %d %d %d\n", width, heightpercolor * numcolors, 255);
+
+	for (int i = 0; i < numcolors; i++) {
+		for (int k = 0; k < heightpercolor; k++) {
+			for (int j = 0; j < width; j++) {
+				fprintf(outptr, "%d ", colorarray[i][0]);
+				fprintf(outptr, "%d ", colorarray[i][1]);
+				fprintf(outptr, "%d", colorarray[i][2]);
+				if (j < (width - 1)) {
+					fprintf(outptr, " ");
+				}
+			}
+			fprintf(outptr, "\n");
+		}
+	}
+
+	fclose(outptr);
+
 	return 0;
 }
 
@@ -27,6 +60,36 @@ int P3colorpalette(char* colorfile, int width, int heightpercolor, char* outputf
 int P6colorpalette(char* colorfile, int width, int heightpercolor, char* outputfile)
 {
 	//YOUR CODE HERE
+	FILE* outptr = fopen(outputfile, "w");
+	if (outptr == NULL) {
+		printf("File can't be opened / created\n");
+		return 1;
+	}
+
+	int numcolors = -1;
+	uint8_t** colorarray = FileToColorMap(colorfile, &numcolors);
+	if (numcolors == -1 || colorarray == NULL) {
+		fclose(outptr);
+		return 1;
+	}
+	
+	fprintf(outptr, "P6 %d %d %d\n", width, heightpercolor * numcolors, 255);
+
+	//printf("Reach here\n");
+
+	for (int i = 0; i < numcolors; i++) {
+		for (int k = 0; k < heightpercolor; k++) {
+			for (int j = 0; j < width; j++) {
+				fwrite(&colorarray[i][0], sizeof(uint8_t), 1, outptr);
+				fwrite(&colorarray[i][1], sizeof(uint8_t), 1, outptr);
+				fwrite(&colorarray[i][2], sizeof(uint8_t), 1, outptr);
+			}
+		}
+		//fprintf(outptr, "\n");
+	}
+
+	fclose(outptr);
+
 	return 0;
 }
 
@@ -34,6 +97,10 @@ int P6colorpalette(char* colorfile, int width, int heightpercolor, char* outputf
 //The one piece of c code you don't have to read or understand. Still, might as well read it, if you have time.
 int main(int argc, char* argv[])
 {
+	//int man[2];
+	//printf("Here1\n");
+	//FileToColorMap("defaultcolormap.txt", man);
+	//printf("Here2\n");
 	if (argc != 5)
 	{
 		usage(argv);

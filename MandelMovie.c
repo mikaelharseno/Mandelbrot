@@ -29,6 +29,16 @@ As another example, if initialscale=10, finalscale=0.01, framecount=5, then your
 */
 void MandelMovie(double threshold, u_int64_t max_iterations, ComplexNumber* center, double initialscale, double finalscale, int framecount, u_int64_t resolution, u_int64_t ** output){
     //YOUR CODE HERE
+    double mult = pow(finalscale / initialscale, (1.0 / (framecount - 1)));
+    double scale = initialscale;
+   // printf("Input args\n");
+    for (int i = 0; i < framecount; i ++) {
+    	//printf("MandelMovie scale: %f", scale);
+    	//printf("Input args\n");
+    	Mandelbrot(threshold, max_iterations, center, scale, resolution, output[i]);
+    	scale = scale * mult;
+    	//printf("Input args\n");
+    }
 }
 
 /**************
@@ -48,9 +58,21 @@ int main(int argc, char* argv[])
 	*/
 
 	//YOUR CODE HERE 
+	double threshold = atof(argv[1]);
+	u_int64_t max_iterations = atoi(argv[2]);
+	double re = atof(argv[3]);
+	double im = atof(argv[4]);
+	ComplexNumber* center = newComplexNumber(re, im);
+	double initialscale = atof(argv[5]);
+	double finalscale = atof(argv[6]);
+	int framecount = atoi(argv[7]);
+	u_int64_t resolution = atoi(argv[8]);
+	char* outputfolder = argv[9];
+	char* colorfile = argv[10];
+	int sz = (int) 2 * resolution + 1;
 
 
-
+	//printf("Input args %d \n", framecount);
 
 	//STEP 2: Run MandelMovie on the correct arguments.
 	/*
@@ -59,9 +81,13 @@ int main(int argc, char* argv[])
 	*/
 
 	//YOUR CODE HERE 
+	u_int64_t** outputarray = (u_int64_t**) malloc(framecount * sizeof(u_int64_t*));
+	for (int i = 0; i < framecount; i++) {
+		outputarray[i] = (u_int64_t*) malloc(sz * sz * sizeof(u_int64_t));
+	}
+	MandelMovie(threshold, max_iterations, center, initialscale, finalscale, framecount, resolution, outputarray);
 
-
-
+	//printf("Input args\n");
 	//STEP 3: Output the results of MandelMovie to .ppm files.
 	/*
 	Convert from iteration count to colors, and output the results into output files.
@@ -72,6 +98,50 @@ int main(int argc, char* argv[])
 
 	//YOUR CODE HERE 
 
+	int numcolors = -1;
+	uint8_t** colorarray = FileToColorMap(colorfile, &numcolors);
+	if (numcolors == -1 || colorarray == NULL) {
+		return 1;
+	}
+
+	char path[200];
+
+	for (int k = 0; k < framecount; k ++) {
+		sprintf(path, "%s/frame%05d.ppm", outputfolder, k);
+		printf("%s\n",path);
+		//sprintf(path,"tesxt.txt");
+		FILE* outptr = fopen(path, "w");
+		if (outptr == NULL) {
+			printf("File can't be opened / created\n");
+			return 1;
+		}
+		fprintf(outptr, "P6 %d %d %d\n", sz, sz, 255);
+
+		u_int64_t* thisoutput = outputarray[k];
+		int index = 0;
+		uint8_t blackarray[3];
+		blackarray[0] = 0;
+		blackarray[1] = 0;
+		blackarray[2] = 0;
+		for (int i = 0; i < sz; i++) {
+			for (int j = 0; j < sz; j++) {
+				int correctindex;
+				if (thisoutput[index] == 0) {
+					fwrite(blackarray, sizeof(uint8_t), 3, outptr);
+				} else {
+					fwrite(colorarray[(thisoutput[index] - 1)% numcolors], sizeof(uint8_t), 3, outptr);
+				}
+				//fwrite(&colorarray[(thisoutput[index] - 1)% numcolors][1], sizeof(uint8_t), 1, outptr);
+				//fwrite(&colorarray[(thisoutput[index] - 1)% numcolors][2], sizeof(uint8_t), 1, outptr);
+				index++;
+			}
+		}
+
+		fclose(outptr);
+	}
+
+	printf("%s\n", argv[1]);
+	printf("Thres: %f \n", threshold);
 
 
 
